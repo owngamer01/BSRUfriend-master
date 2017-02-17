@@ -1,6 +1,7 @@
 package appewtc.masterung.bsrufriend;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
@@ -11,6 +12,7 @@ import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -18,7 +20,13 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class ServiceActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -64,6 +72,17 @@ public class ServiceActivity extends FragmentActivity implements OnMapReadyCallb
         //My loop
         myLoop();
 
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                aBoolean = false;
+                Intent intent = new Intent(ServiceActivity.this, ListFriend.class);
+                intent.putExtra("Login", loginStrings);
+                startActivity(intent);
+                finish();
+            }
+        });
+
     }   //  Main Method
 
     private void myLoop() {
@@ -72,6 +91,8 @@ public class ServiceActivity extends FragmentActivity implements OnMapReadyCallb
         afterResume();
 
         updateLatLng();
+
+        createMaker();
 
         //delay
         if (aBoolean == true) {
@@ -89,6 +110,48 @@ public class ServiceActivity extends FragmentActivity implements OnMapReadyCallb
 
     } // My loop
 
+    private void createMaker() {
+        try {
+
+            mMap.clear();
+            String urlPHP = "http://swiftcodingthai.com/bsru/get_user_tae.php";
+            int[] avatar = new int[]{
+                    R.drawable.bird48,
+                    R.drawable.doremon48,
+                    R.drawable.kon48,
+                    R.drawable.nobita48,
+                    R.drawable.rat48
+            };
+
+            GetUser getUser = new GetUser(ServiceActivity.this);
+            getUser.execute(urlPHP);
+            String strJSON = getUser.get();
+            JSONArray jsonArray = new JSONArray(strJSON);
+
+            for (int i = 0; i < jsonArray.length(); i++) {
+
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                LatLng latLng = new LatLng(
+                        Double.parseDouble(jsonObject.getString("Lat")),
+                        Double.parseDouble(jsonObject.getString("Lng"))
+                );
+                Log.d("17V3", "Index avata => " + jsonObject.getString("Avata"));
+                mMap.addMarker(new MarkerOptions()
+                        .position(latLng)
+                        .icon(BitmapDescriptorFactory.fromResource(avatar[Integer.parseInt(jsonObject.getString("Avata"))]))
+                        .title(jsonObject.getString("Name")));
+
+
+            } // forLoop
+
+            getUser.cancel(true);
+
+        } catch (Exception ex) {
+            Log.d("17V3", "createMaker Error => " + ex);
+        }
+
+    }   // createMaker
+
     private void updateLatLng() {
         try {
             EditLatLng editLatLng = new EditLatLng(ServiceActivity.this, loginStrings[0]);
@@ -96,7 +159,11 @@ public class ServiceActivity extends FragmentActivity implements OnMapReadyCallb
 
             boolean b = Boolean.parseBoolean(editLatLng.get());
 
+            editLatLng.cancel(true);
+
         } catch (Exception ex) {
+
+            Log.d("17V3", "ERROR updateLatLng => " + ex);
 
         }
 
