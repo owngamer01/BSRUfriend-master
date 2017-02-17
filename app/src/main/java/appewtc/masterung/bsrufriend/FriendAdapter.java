@@ -52,7 +52,7 @@ public class FriendAdapter extends BaseAdapter{
         imageView = (ImageView) view1.findViewById(R.id.imageView10);
 
         // show view
-        textView.setText(nameStrings[1]);
+        textView.setText(nameStrings[i]);
         Picasso.with(context).load(iconStrings[i]).into(imageView);
 
 
